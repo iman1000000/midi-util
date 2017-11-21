@@ -13,19 +13,21 @@ navigator.requestMIDIAccess({sysex: true}).then(function(midi) {
 });
 
 function setupMidiDevices() {
-    var outputs = midi.outputs.values();
-    for (var output = outputs.next(); output && !output.done; output = outputs.next()) {
-        if (output.value.name.includes('reface'))
-            toReface = output.value;
-        if (output.value.name.includes('Circuit'))
-            toCircuit = output.value;
-    }
-    var inputs = midi.inputs.values();
-    for (var input = inputs.next(); input && !input.done; input = inputs.next()) {
-        if (input.value.name.includes('reface'))
-            fromReface = input.value;
-        if (input.value.name.includes('Circuit'))
-            fromCircuit = input.value;  }
+    navigator.requestMIDIAccess({sysex: true}).then(midi => {
+        var outputs = midi.outputs.values();
+        for (var output = outputs.next(); output && !output.done; output = outputs.next()) {
+            if (output.value.name.includes('reface'))
+                toReface = output.value;
+            if (output.value.name.includes('Circuit'))
+                toCircuit = output.value;
+        }
+        var inputs = midi.inputs.values();
+        for (var input = inputs.next(); input && !input.done; input = inputs.next()) {
+            if (input.value.name.includes('reface'))
+                fromReface = input.value;
+            if (input.value.name.includes('Circuit'))
+                fromCircuit = input.value;  }
+    });
 }
 
 function send(msg) {
