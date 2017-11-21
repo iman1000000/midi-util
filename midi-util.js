@@ -34,8 +34,19 @@ function start() {
 }
 
 function send(msg) {
-    if (outputMode == 'INTERN')
-        toReface.send(msg.data);
+    var output, channel;
+    if (outputMode == 'INTERN') {
+        output = toReface;
+        channel = 0x00;
+    } else {
+        return;
+    }
+
+    if (msg.data == 0xfe || msg.data == 0xf8) {
+        return;
+    }
+    // TODO set channel
+    output.send(msg.data);
 }
 
 intern.onclick = function() {
