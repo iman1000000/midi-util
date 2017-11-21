@@ -2,15 +2,14 @@ var toReface, fromReface;
 var toCircuit, fromCircuit;
 var outputMode = 'INTERN'; // INTERN, EXTERN1, EXTERN2, EXTERN10
 
-navigator.requestMIDIAccess({sysex: true}).then(function(midi) {
-    setupMidiDevices();
-    if (fromReface) {
-        // Disable local control
-        toReface.send([0xf0, 0x43, 0x10, 0x7f, 0x1c, 0x03, 0x00, 0x00, 0x06, 0x00, 0xf7]);
+setupMidiDevices();
+if (fromReface) {
+    // Disable local control
+    toReface.send([0xf0, 0x43, 0x10, 0x7f, 0x1c, 0x03, 0x00, 0x00, 0x06, 0x00, 0xf7]);
 
-        fromReface.onmidimessage = send;
-    }
-});
+    fromReface.onmidimessage = send;
+}
+
 
 function setupMidiDevices() {
     navigator.requestMIDIAccess({sysex: true}).then(midi => {
