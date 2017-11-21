@@ -1,7 +1,18 @@
 var toReface, fromReface;
 var toCircuit, fromCircuit;
+var outputMode = 'INTERN'; // INTERN, EXTERN1, EXTERN2, EXTERN10
 
 navigator.requestMIDIAccess({sysex: true}).then(function(midi) {
+    setupMidiDevices();
+    if (fromReface) {
+        // Disable local control
+        toReface.send([0xf0, 0x43, 0x10, 0x7f, 0x1c, 0x03, 0x00, 0x00, 0x06, 0x00, 0xf7]);
+
+        fromReface.onmidimessage = send;
+    }
+});
+
+function setupMidiDevices() {
     var outputs = midi.outputs.values();
     for (var output = outputs.next(); output && !output.done; output = outputs.next()) {
         if (output.value.name.includes('reface'))
@@ -15,38 +26,25 @@ navigator.requestMIDIAccess({sysex: true}).then(function(midi) {
             fromReface = input.value;
         if (input.value.name.includes('Circuit'))
             fromCircuit = input.value;  }
-    /*
-    i.onmidimessage = msg => {
-        o.send(msg.data);
-        console.log(msg.data)
-    }
-    */
-});
+}
+
+function send(msg) {
+    if (outputMode == 'INTERN')
+        toReface.send(msg.data);
+}
 
 intern.onclick = function() {
-    // Enable local control
-    toReface.send([0xf0, 0x43, 0x10, 0x7f, 0x1c, 0x03, 0x00, 0x00, 0x06, 0x01, 0xf7]);
-    // Disable midi out
-    toReface.send([0xf0, 0x43, 0x10, 0x7f, 0x1c, 0x03, 0x00, 0x00, 0x00, 0x7f, 0xf7]);
+    outputMode = 'INTERN';
 };
 
 extern1.onclick = function() {
-    // Disable local control
-    toReface.send([0xf0, 0x43, 0x10, 0x7f, 0x1c, 0x03, 0x00, 0x00, 0x06, 0x00, 0xf7]);
-    // Enable midi out on Channel 1 (0x00)
-    toReface.send([0xf0, 0x43, 0x10, 0x7f, 0x1c, 0x03, 0x00, 0x00, 0x00, 0x00, 0xf7]);
+    outputMode = 'EXTERN1';
 };
 
 extern2.onclick = function() {
-    // Disable local control
-    toReface.send([0xf0, 0x43, 0x10, 0x7f, 0x1c, 0x03, 0x00, 0x00, 0x06, 0x00, 0xf7]);
-    // Enable midi out on Channel 2 (0x01)
-    toReface.send([0xf0, 0x43, 0x10, 0x7f, 0x1c, 0x03, 0x00, 0x00, 0x00, 0x01, 0xf7]);
+    outputMode = 'EXTERN2';
 };
 
 extern10.onclick = function() {
-    // Disable local control
-    toReface.send([0xf0, 0x43, 0x10, 0x7f, 0x1c, 0x03, 0x00, 0x00, 0x06, 0x00, 0xf7]);
-    // Enable midi out on Channel 10 (0x09)
-    toReface.send([0xf0, 0x43, 0x10, 0x7f, 0x1c, 0x03, 0x00, 0x00, 0x00, 0x09, 0xf7]);
+    outputMode = 'EXTERN10';
 };
