@@ -3,23 +3,42 @@
 <head>
     <meta charset="utf-8" />
     <title>Midi Util</title>
+    <style>
+* {
+    margin: 0px;
+}
+table {
+    width: 100%;
+    font-family: sans-serif;
+    text-align: center;
+    font-weight: bold;
+}
+td {
+    width: 25%;
+    height: 99vh;
+    background: #aaa;
+    color: #555;
+}
+td.enabled {
+    background: #ace;
+    color: #000;
+}
+    </style>
 </head>
 <body>
-    <button id=intern>
+    <table><tr>
+    <td class=enabled id=intern>
         INTERNAL
-    </button>
-    <br>
-    <button id=extern1>
+    </td>
+    <td id=extern1>
         CHANNEL 1
-    </button>
-    <br>
-    <button id=extern2>
+    </td>
+    <td id=extern2>
         CHANNEL 2
-    </button>
-    <br>
-    <button id=extern10>
+    </td>
+    <td id=extern10>
         CHANNEL 10
-    </button>
+    </td>
     <script src='midi-util.js'></script>
 </body>
 </html>

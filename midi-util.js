@@ -68,18 +68,48 @@ function send(msg) {
     output.send(msg.data);
 }
 
-intern.onclick = function() {
+intern.addEventListener('mousedown', internHandler, false);
+intern.addEventListener('touchstart', internHandler, false);
+extern1.addEventListener('mousedown', extern1Handler, false);
+extern1.addEventListener('touchstart', extern1Handler, false);
+extern2.addEventListener('mousedown', extern2Handler, false);
+extern2.addEventListener('touchstart', extern2Handler, false);
+extern10.addEventListener('mousedown', extern10Handler, false);
+extern10.addEventListener('touchstart', extern10Handler, false);
+
+function internHandler(e) {
     outputMode = 'INTERN';
-};
+    intern.classList.add('enabled');
+    extern1.classList.remove('enabled');
+    extern2.classList.remove('enabled');
+    extern10.classList.remove('enabled');
+    // stops touch events from double triggering
+    e.preventDefault();
+}
 
-extern1.onclick = function() {
+function extern1Handler(e) {
     outputMode = 'EXTERN1';
-};
+    intern.classList.remove('enabled');
+    extern1.classList.add('enabled');
+    extern2.classList.remove('enabled');
+    extern10.classList.remove('enabled');
+    e.preventDefault();
+}
 
-extern2.onclick = function() {
+function extern2Handler(e) {
     outputMode = 'EXTERN2';
-};
+    intern.classList.remove('enabled');
+    extern1.classList.remove('enabled');
+    extern2.classList.add('enabled');
+    extern10.classList.remove('enabled');
+    e.preventDefault();
+}
 
-extern10.onclick = function() {
+function extern10Handler(e) {
     outputMode = 'EXTERN10';
-};
+    intern.classList.remove('enabled');
+    extern1.classList.remove('enabled');
+    extern2.classList.remove('enabled');
+    extern10.classList.add('enabled');
+    e.preventDefault();
+}
