@@ -58,7 +58,13 @@ function send(msg) {
     // set channel
     msg.data[0] &= 0xf0;
     msg.data[0] |= channel;
-    // TODO drum modulo
+
+    if (outputMode == 'EXTERN10' && (msg.data[0] & 0b11100000) == 0b10000000) {
+        // modulo the drum notes, so that they work on any octave
+        msg.data[1] %= 12;
+        msg.data[1] += 60;
+    }
+
     output.send(msg.data);
 }
 
