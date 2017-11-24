@@ -42,7 +42,8 @@ function send(msg) {
         return;
     }
 
-    if (msg.data == 0xfe || msg.data == 0xf8) {
+    // don't send system messages
+    if (msg.data & 0xf0 == 0xf0) {
         return;
     }
     // TODO set channel
