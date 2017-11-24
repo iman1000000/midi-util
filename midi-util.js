@@ -37,7 +37,16 @@ function send(msg) {
     var output, channel;
     if (outputMode == 'INTERN') {
         output = toReface;
-        channel = 0x00;
+        channel = 0x00; // channel 1
+    } else if (outputMode == 'EXTERN1') {
+        output = toCircuit;
+        channel = 0x00; // channel 1
+    } else if (outputMode == 'EXTERN2') {
+        output = toCircuit;
+        channel = 0x01; // channel 2
+    } else if (outputMode == 'EXTERN10') {
+        output = toCircuit;
+        channel = 0x09; // channel 10
     } else {
         return;
     }
@@ -46,7 +55,10 @@ function send(msg) {
     if (msg.data[0] & 0xf0 == 0xf0) {
         return;
     }
-    // TODO set channel
+    // set channel
+    msg.data[0] &= 0xf0;
+    msg.data[0] |= channel;
+    // TODO drum modulo
     output.send(msg.data);
 }
 
