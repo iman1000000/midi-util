@@ -79,6 +79,7 @@ extern10.addEventListener('touchstart', extern10Handler, false);
 
 function internHandler(e) {
     outputMode = 'INTERN';
+    releaseNotes();
     intern.classList.add('enabled');
     extern1.classList.remove('enabled');
     extern2.classList.remove('enabled');
@@ -89,6 +90,7 @@ function internHandler(e) {
 
 function extern1Handler(e) {
     outputMode = 'EXTERN1';
+    releaseNotes();
     intern.classList.remove('enabled');
     extern1.classList.add('enabled');
     extern2.classList.remove('enabled');
@@ -98,6 +100,7 @@ function extern1Handler(e) {
 
 function extern2Handler(e) {
     outputMode = 'EXTERN2';
+    releaseNotes();
     intern.classList.remove('enabled');
     extern1.classList.remove('enabled');
     extern2.classList.add('enabled');
@@ -107,9 +110,17 @@ function extern2Handler(e) {
 
 function extern10Handler(e) {
     outputMode = 'EXTERN10';
+    releaseNotes();
     intern.classList.remove('enabled');
     extern1.classList.remove('enabled');
     extern2.classList.remove('enabled');
     extern10.classList.add('enabled');
     e.preventDefault();
+}
+
+function releaseNotes() {
+    toReface.send([0xb0, 0x7b, 0x00]);
+    toCircuit.send([0xb0, 0x7b, 0x00]); // Channel 1
+    toCircuit.send([0xb1, 0x7b, 0x00]); // Channel 2
+    toCircuit.send([0xb9, 0x7b, 0x00]); // Channel 10
 }
