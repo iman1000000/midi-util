@@ -86,6 +86,9 @@ function internHandler(e) {
     extern10.classList.remove('enabled');
     // stops touch events from double triggering
     e.preventDefault();
+    // stops screen from turning off while page is open
+    // must be called from a button press
+    noSleep.enable();
 }
 
 function extern1Handler(e) {
@@ -96,6 +99,7 @@ function extern1Handler(e) {
     extern2.classList.remove('enabled');
     extern10.classList.remove('enabled');
     e.preventDefault();
+    noSleep.enable();
 }
 
 function extern2Handler(e) {
@@ -106,6 +110,7 @@ function extern2Handler(e) {
     extern2.classList.add('enabled');
     extern10.classList.remove('enabled');
     e.preventDefault();
+    noSleep.enable();
 }
 
 function extern10Handler(e) {
@@ -116,6 +121,7 @@ function extern10Handler(e) {
     extern2.classList.remove('enabled');
     extern10.classList.add('enabled');
     e.preventDefault();
+    noSleep.enable();
 }
 
 function releaseNotes() {
