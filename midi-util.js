@@ -2,7 +2,7 @@ var toReface, fromReface;
 var toCircuit, fromCircuit;
 var outputMode = 'INTERN'; // INTERN, EXTERN1, EXTERN2, EXTERN10
 
-start();
+connect();
 
 function main() {
     if (fromReface) {
@@ -14,7 +14,8 @@ function main() {
 }
 
 
-function start() {
+function connect() {
+    toReface = fromReface = toCircuit = fromCircuit = undefined;
     navigator.requestMIDIAccess({sysex: true}).then(midi => {
         var outputs = midi.outputs.values();
         for (var output = outputs.next(); output && !output.done; output = outputs.next()) {
@@ -76,6 +77,8 @@ extern2.addEventListener('mousedown', extern2Handler, false);
 extern2.addEventListener('touchstart', extern2Handler, false);
 extern10.addEventListener('mousedown', extern10Handler, false);
 extern10.addEventListener('touchstart', extern10Handler, false);
+reconnect.addEventListener('mousedown', reconnectHandler, false);
+reconnect.addEventListener('touchstart', reconnectHandler, false);
 
 function internHandler(e) {
     outputMode = 'INTERN';
@@ -122,6 +125,10 @@ function extern10Handler(e) {
     extern10.classList.add('enabled');
     e.preventDefault();
     noSleep.enable();
+}
+
+function reconnectHandler(e) {
+    connect();
 }
 
 function releaseNotes() {
