@@ -71,16 +71,11 @@ function send(msg) {
     output.send(msg.data);
 }
 
-intern.addEventListener('mousedown', internHandler, false);
-intern.addEventListener('touchstart', internHandler, false);
-extern1.addEventListener('mousedown', extern1Handler, false);
-extern1.addEventListener('touchstart', extern1Handler, false);
-extern2.addEventListener('mousedown', extern2Handler, false);
-extern2.addEventListener('touchstart', extern2Handler, false);
-extern10.addEventListener('mousedown', extern10Handler, false);
-extern10.addEventListener('touchstart', extern10Handler, false);
-reconnect.addEventListener('mousedown', reconnectHandler, false);
-reconnect.addEventListener('touchstart', reconnectHandler, false);
+intern.addEventListener('click', internHandler, false);
+extern1.addEventListener('click', extern1Handler, false);
+extern2.addEventListener('click', extern2Handler, false);
+extern10.addEventListener('click', extern10Handler, false);
+reconnect.addEventListener('click', reconnectHandler, false);
 
 function internHandler(e) {
     outputMode = 'INTERN';
