@@ -2,6 +2,8 @@ var toReface, fromReface;
 var toCircuit, fromCircuit;
 var outputMode = 'INTERN'; // INTERN, EXTERN1, EXTERN2, EXTERN10
 
+var noSleep = new NoSleep();
+
 connect();
 
 function main() {
