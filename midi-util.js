@@ -1,4 +1,4 @@
-var toReface, fromReface;
+var toKeyboard, fromKeyboard;
 var toCircuit, fromCircuit;
 var outputMode = 'INTERN'; // INTERN, EXTERN1, EXTERN2, EXTERN10
 
@@ -7,31 +7,34 @@ var noSleep = new NoSleep();
 connect();
 
 function main() {
-    if (fromReface) {
+    if (fromKeyboard) {
         // Disable local control
-        toReface.send([0xf0, 0x43, 0x10, 0x7f, 0x1c, 0x03, 0x00, 0x00, 0x06, 0x00, 0xf7]);
+        toKeyboard.send([0xf0, 0x43, 0x10, 0x7f, 0x1c, 0x03, 0x00, 0x00, 0x06, 0x00, 0xf7]);
 
-        fromReface.onmidimessage = send;
+        fromKeyboard.onmidimessage = send;
     }
 }
 
 
 function connect() {
-    toReface = fromReface = toCircuit = fromCircuit = undefined;
+    toKeyboard = fromKeyboard = toCircuit = fromCircuit = undefined;
     navigator.requestMIDIAccess({sysex: true}).then(midi => {
         var outputs = midi.outputs.values();
         for (var output = outputs.next(); output && !output.done; output = outputs.next()) {
-            if (output.value.name.includes('reface'))
-                toReface = output.value;
-            if (output.value.name.includes('Circuit'))
+            if (output.value.name.includes('Circuit')) {
                 toCircuit = output.value;
+            } else {
+                toKeyboard = output.value;
+            }
         }
         var inputs = midi.inputs.values();
         for (var input = inputs.next(); input && !input.done; input = inputs.next()) {
-            if (input.value.name.includes('reface'))
-                fromReface = input.value;
-            if (input.value.name.includes('Circuit'))
-                fromCircuit = input.value;  }
+            if (input.value.name.includes('Circuit')) {
+                fromCircuit = input.value;
+            } else {
+                fromKeyboard = input.value;
+            }
+        }
         main();
     });
 }
@@ -39,7 +42,7 @@ function connect() {
 function send(msg) {
     var output, channel;
     if (outputMode == 'INTERN') {
-        output = toReface;
+        output = toKeyboard;
         channel = 0x00; // channel 1
     } else if (outputMode == 'EXTERN1') {
         output = toCircuit;
@@ -132,8 +135,8 @@ function reconnectHandler(e) {
 }
 
 function releaseNotes() {
-    if (toReface) {
-        toReface.send([0xb0, 0x7b, 0x00]);
+    if (toKeyboard) {
+        toKeyboard.send([0xb0, 0x7b, 0x00]);
     }
     if (toCircuit) {
         toCircuit.send([0xb0, 0x7b, 0x00]); // Channel 1
