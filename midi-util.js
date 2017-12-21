@@ -17,7 +17,16 @@ function main() {
 
 
 function connect() {
+    // clear existing inputs, if any
+    if (fromCircuit) {
+        fromCircuit.onmidimessage = undefined;
+    }
+    if (fromKeyboard) {
+        fromKeyboard.onmidimessage = undefined;
+        console.log(fromKeyboard.onmidimessage);
+    }
     toKeyboard = fromKeyboard = toCircuit = fromCircuit = undefined;
+
     navigator.requestMIDIAccess({sysex: true}).then(midi => {
         var outputs = midi.outputs.values();
         for (var output = outputs.next(); output && !output.done; output = outputs.next()) {
