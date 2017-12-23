@@ -1,66 +1,112 @@
-var toKeyboard, fromKeyboard;
+// var toKeyboard, fromKeyboard;
 var toCircuit, fromCircuit;
 var outputMode = 'INTERN'; // INTERN, EXTERN1, EXTERN2, EXTERN10
+var midi;
 
 var noSleep = new NoSleep();
 
-connect();
-
-function main() {
-    if (fromKeyboard) {
-        // Disable local control
-        toKeyboard.send([0xf0, 0x43, 0x10, 0x7f, 0x1c, 0x03, 0x00, 0x00, 0x06, 0x00, 0xf7]);
-
-        fromKeyboard.onmidimessage = send;
+var keyboards = {
+    froms: [],
+    tos: [],
+    send(data) {
+        for (var to of this.tos) {
+            to.send(data);
+        }
+    },
+    clear() {
+        // removes devices
+        this.setCallback(undefined);
+        this.tos = [];
+        this.froms = [];
+    },
+    setCallback(callback) {
+        for (var from of this.froms) {
+            from.onmidimessage = callback;
+        }
     }
-}
+};
 
+var circuit = {
+    from: undefined,
+    to: undefined,
+    send(data) {
+        if (this.to) {
+            this.to.send(data);
+        }
+    },
+    clear() {
+        // removes device if connected
+        this.setCallback(undefined);
+        this.from = undefined;
+        this.to = undefined;
+    },
+    setCallback() {
+        if (this.from) {
+            this.from.onmidimessage = undefined;
+        }
+    }
+};
+
+init();
 
 function connect() {
     // clear existing inputs, if any
-    if (fromCircuit) {
-        fromCircuit.onmidimessage = undefined;
-    }
-    if (fromKeyboard) {
-        fromKeyboard.onmidimessage = undefined;
-        console.log(fromKeyboard.onmidimessage);
-    }
-    toKeyboard = fromKeyboard = toCircuit = fromCircuit = undefined;
+    circuit.clear();
+    keyboards.clear();
 
-    navigator.requestMIDIAccess({sysex: true}).then(midi => {
-        var outputs = midi.outputs.values();
-        for (var output = outputs.next(); output && !output.done; output = outputs.next()) {
-            if (output.value.name.includes('Circuit')) {
-                toCircuit = output.value;
-            } else {
-                toKeyboard = output.value;
-            }
+    // obtain outputs
+    var outputs = midi.outputs.values();
+    for (var output = outputs.next(); output && !output.done; output = outputs.next()) {
+        if (output.value.name.includes('Midi Through Port')) continue;
+        if (output.value.name.includes('Circuit')) {
+            circuit.to = output.value;
+        } else {
+            keyboards.tos.push(output.value);
         }
-        var inputs = midi.inputs.values();
-        for (var input = inputs.next(); input && !input.done; input = inputs.next()) {
-            if (input.value.name.includes('Circuit')) {
-                fromCircuit = input.value;
-            } else {
-                fromKeyboard = input.value;
-            }
+    }
+
+    // obtain inputs
+    var inputs = midi.inputs.values();
+    for (var input = inputs.next(); input && !input.done; input = inputs.next()) {
+        console.log(input.value.name);
+        if (input.value.name.includes('Midi Through Port')) continue;
+        if (input.value.name.includes('Circuit')) {
+            circuit.from = input.value;
+        } else {
+            keyboards.froms.push(input.value);
         }
-        main();
+    }
+    // bind input callbacks
+    keyboards.setCallback(keyboardCallback);
+    circuit.setCallback(circuitCallback);
+
+    // Disable reface local control
+    keyboards.send([0xf0, 0x43, 0x10, 0x7f, 0x1c, 0x03, 0x00, 0x00, 0x06, 0x00, 0xf7]);
+    // TODO enable reface slider CCs
+
+}
+
+
+function init() {
+    navigator.requestMIDIAccess({sysex: true}).then(midiAccess => {
+        midi = midiAccess;
+        connect();
     });
 }
 
-function send(msg) {
+function keyboardCallback(msg) {
     var output, channel;
     if (outputMode == 'INTERN') {
-        output = toKeyboard;
+        output = keyboards;
         channel = 0x00; // channel 1
     } else if (outputMode == 'EXTERN1') {
-        output = toCircuit;
+        output = circuit;
         channel = 0x00; // channel 1
     } else if (outputMode == 'EXTERN2') {
-        output = toCircuit;
+        output = circuit;
         channel = 0x01; // channel 2
     } else if (outputMode == 'EXTERN10') {
-        output = toCircuit;
+        output = circuit;
         channel = 0x09; // channel 10
     } else {
         return;
@@ -81,6 +127,9 @@ function send(msg) {
     }
 
     output.send(msg.data);
+}
+
+function circuitCallback(msg) {
 }
 
 intern.addEventListener('click', internHandler, false);
@@ -104,7 +153,7 @@ function internHandler(e) {
 }
 
 function extern1Handler(e) {
-    if (!toCircuit) return;
+    // TODO: disable these buttons if the circuit is not connected
     outputMode = 'EXTERN1';
     releaseNotes();
     intern.classList.remove('enabled');
@@ -116,7 +165,6 @@ function extern1Handler(e) {
 }
 
 function extern2Handler(e) {
-    if (!toCircuit) return;
     outputMode = 'EXTERN2';
     releaseNotes();
     intern.classList.remove('enabled');
@@ -128,7 +176,6 @@ function extern2Handler(e) {
 }
 
 function extern10Handler(e) {
-    if (!toCircuit) return;
     outputMode = 'EXTERN10';
     releaseNotes();
     intern.classList.remove('enabled');
@@ -144,9 +191,7 @@ function reconnectHandler(e) {
 }
 
 function releaseNotes() {
-    if (toKeyboard) {
-        toKeyboard.send([0xb0, 0x7b, 0x00]);
-    }
+    keyboards.send([0xb0, 0x7b, 0x00]);
     if (toCircuit) {
         toCircuit.send([0xb0, 0x7b, 0x00]); // Channel 1
         toCircuit.send([0xb1, 0x7b, 0x00]); // Channel 2
