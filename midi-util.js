@@ -68,7 +68,6 @@ function connect() {
     // obtain inputs
     var inputs = midi.inputs.values();
     for (var input = inputs.next(); input && !input.done; input = inputs.next()) {
-        console.log(input.value.name);
         if (input.value.name.includes('Midi Through Port')) continue;
         if (input.value.name.includes('Circuit')) {
             circuit.from = input.value;
