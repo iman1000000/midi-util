@@ -1,5 +1,4 @@
 // var toKeyboard, fromKeyboard;
-var toCircuit, fromCircuit;
 var outputMode = 'INTERN'; // INTERN, EXTERN1, EXTERN2, EXTERN10
 var midi;
 
