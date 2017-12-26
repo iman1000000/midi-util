@@ -40,9 +40,9 @@ var circuit = {
         this.from = undefined;
         this.to = undefined;
     },
-    setCallback() {
+    setCallback(callback) {
         if (this.from) {
-            this.from.onmidimessage = undefined;
+            this.from.onmidimessage = callback;
         }
     }
 };
@@ -129,6 +129,10 @@ function keyboardCallback(msg) {
 }
 
 function circuitCallback(msg) {
+    console.log(msg.data);
+    if (msg.data[0] == 0xf8) { // timing clock
+        keyboards.send(msg.data);
+    }
 }
 
 intern.addEventListener('click', internHandler, false);
