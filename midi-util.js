@@ -1,6 +1,8 @@
 // var toKeyboard, fromKeyboard;
 var outputMode = 'INTERN'; // INTERN, EXTERN1, EXTERN2, EXTERN10
 var midi;
+var keysDown = [];
+var portamentoDisabled = false;
 
 var noSleep = new NoSleep();
 
@@ -80,7 +82,16 @@ function connect() {
 
     // Disable reface local control
     keyboards.send([0xf0, 0x43, 0x10, 0x7f, 0x1c, 0x03, 0x00, 0x00, 0x06, 0x00, 0xf7]);
-    // TODO enable reface slider CCs
+    // enable reface slider CCs
+    keyboards.send([0xf0, 0x43, 0x10, 0x7f, 0x1c, 0x03, 0x00, 0x00, 0x0e, 0x01, 0xf7]);
+
+    // TODO leave until there's a connected device UI
+    for (var k of keyboards.froms) {
+        console.log(k.name);
+    }
+    if (circuit.from) {
+        console.log('Novation Circuit');
+    }
 
 }
 
@@ -93,7 +104,40 @@ function init() {
 }
 
 function keyboardCallback(msg) {
+    // ignore system messages
+    if ((msg.data[0] & 0xf0) == 0xf0) {
+        return;
+    }
+
+    // enable portamento blocking when portamento is set to 1
+    if ((msg.data[0] & 0xf0) == 0xb0 &&  // is a control change and
+            msg.data[1] == 0x14          // is a portamento CC
+            ){
+        if (msg.data[2] == 1) { // is setting portamento to 1
+            portamentoDisabled = true;
+        } else {
+            portamentoDisabled = false;
+        }
+    }
+
+    // don't send control changes to the circuit
+    if (outputMode != 'INTERN' && (msg.data[0] & 0xf0) == 0xb0) {
+        return;
+    }
+
+    trackKeys(msg);
+
+    if (portamentoDisabled) {
+        portamentoBlock(msg);
+    } else {
+        sendMsg(msg);
+    }
+}
+
+// send a midi message to the current output
+function sendMsg(msg) {
     var output, channel;
+
     if (outputMode == 'INTERN') {
         output = keyboards;
         channel = 0x00; // channel 1
@@ -110,10 +154,6 @@ function keyboardCallback(msg) {
         return;
     }
 
-    // don't send system messages
-    if ((msg.data[0] & 0xf0) == 0xf0) {
-        return;
-    }
     // set channel
     msg.data[0] &= 0xf0;
     msg.data[0] |= channel;
@@ -127,11 +167,78 @@ function keyboardCallback(msg) {
     output.send(msg.data);
 }
 
+function trackKeys(msg) {
+    if (isKeyDown(msg)) {
+        let key = msg.data[1];
+        if (!keysDown.includes(key)) {
+            keysDown.push(key);
+        }
+    } else if (isKeyUp(msg)) {
+        let key = msg.data[1];
+        if (keysDown.includes(key)) {
+            keysDown.splice(keysDown.indexOf(key), 1);
+        }
+    }
+}
+
+function portamentoBlock(msg) {
+    if (isKeyDown(msg)) {
+        if (keysDown.length > 1) {
+            // a midi message with a copy of the source message data
+            var releaseMessage = {data: msg.data.slice()};
+            // release the last note
+            releaseMessage.data[1] = keysDown[keysDown.length-2];
+            // set velocity to 0
+            releaseMessage.data[2] = 0;
+
+            sendMsg(releaseMessage);
+        }
+        sendMsg(msg);
+    } else if (isKeyUp(msg)) {
+        if (keysDown.length > 0) {
+            // a midi message with a copy of the source message data
+            var playMessage = {data: msg.data.slice()};
+            // ensure it's a note on, not note off
+            playMessage.data[0] |= 0b00010000;
+            // play the last note
+            playMessage.data[1] = keysDown[keysDown.length-1];
+            // set velocity to 100
+            // TODO: use the velocity of the note when it was first played
+            // I mostly use synths without velocity, so it doesn't bother me
+            playMessage.data[2] = 100;
+
+            sendMsg(msg);
+            sendMsg(playMessage);
+        } else {
+            sendMsg(msg);
+        }
+    } else {
+        sendMsg(msg);
+    }
+}
+
 function circuitCallback(msg) {
-    console.log(msg.data);
     if (msg.data[0] == 0xf8) { // timing clock
         keyboards.send(msg.data);
     }
+}
+
+function isKeyDown(msg) {
+    if ((msg.data[0] & 0xf0) == 0x90 && // is note on message and...
+            msg.data[2] !== 0) { // ... doesn't have velocity 0
+        return true;
+    }
+    return false;
+}
+
+function isKeyUp(msg) {
+    if ((msg.data[0] & 0xf0) == 0x80 || // is note off message, or
+            ((msg.data[0] & 0xf0) == 0x90 && // is note on message and...
+            msg.data[2] === 0) // ... has velocity 0
+            ) {
+        return true;
+    }
+    return false;
 }
 
 intern.addEventListener('click', internHandler, false);
@@ -194,9 +301,9 @@ function reconnectHandler(e) {
 
 function releaseNotes() {
     keyboards.send([0xb0, 0x7b, 0x00]);
-    if (toCircuit) {
-        toCircuit.send([0xb0, 0x7b, 0x00]); // Channel 1
-        toCircuit.send([0xb1, 0x7b, 0x00]); // Channel 2
-        toCircuit.send([0xb9, 0x7b, 0x00]); // Channel 10
+    if (circuit) {
+        circuit.send([0xb0, 0x7b, 0x00]); // Channel 1
+        circuit.send([0xb1, 0x7b, 0x00]); // Channel 2
+        circuit.send([0xb9, 0x7b, 0x00]); // Channel 10
     }
 }
