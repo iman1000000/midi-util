@@ -120,11 +120,6 @@ function keyboardCallback(msg) {
         }
     }
 
-    // don't send control changes to the circuit
-    if (outputMode != 'INTERN' && (msg.data[0] & 0xf0) == 0xb0) {
-        return;
-    }
-
     trackKeys(msg);
 
     if (portamentoDisabled) {
@@ -152,6 +147,12 @@ function sendMsg(msg) {
         channel = 0x09; // channel 10
     } else {
         return;
+    }
+
+    // always send control changes to the keyboards
+    if ((msg.data[0] & 0xf0) == 0xb0) {
+        output = keyboards;
+        channel = 0x00; // channel 1
     }
 
     // set channel
