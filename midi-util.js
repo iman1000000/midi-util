@@ -122,7 +122,7 @@ function keyboardCallback(msg) {
 
     trackKeys(msg);
 
-    if (portamentoDisabled) {
+    if (portamentoDisabled && outputMode == 'INTERN') {
         portamentoBlock(msg);
     } else {
         sendMsg(msg);
