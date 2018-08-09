@@ -85,6 +85,8 @@ function connect() {
     // enable reface slider CCs
     keyboards.send([0xf0, 0x43, 0x10, 0x7f, 0x1c, 0x03, 0x00, 0x00, 0x0e, 0x01, 0xf7]);
 
+    ys200init();
+
     // TODO leave until there's a connected device UI
     for (var k of keyboards.froms) {
         console.log(k.name);
@@ -93,6 +95,10 @@ function connect() {
         console.log('Novation Circuit');
     }
 
+}
+
+function ys200init() {
+    keyboards.send([240,67,1,126,0,110,76,77,32,32,56,48,51,54,83,32,64,16,1,1,4,2,18,0,0,126,0,24,99,3,3,0,4,0,99,0,127,127,0,24,99,3,0,0,0,2,0,16,0,127,0,48,0,3,3,0,0,0,99,0,127,0,0,48,24,3,0,0,0,2,99,4,127,32,14,0,99,3,3,0,0,2,99,0,127,3,0,48,80,3,0,0,0,2,99,0,127,0,14,0,99,0,0,0,0,2,0,16,0,127,0,48,32,3,0,0,1,247]);
 }
 
 
